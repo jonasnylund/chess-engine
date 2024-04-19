@@ -93,6 +93,7 @@ Board Board::FromFEN(const std::string& fen) {
   chars_read++;
   if (fen.at(chars_read) == '-') {
     board.en_passent = std::nullopt;
+    chars_read++;
   }
   else {
     SquareIndex en_passent;
