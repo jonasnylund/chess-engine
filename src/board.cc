@@ -135,25 +135,25 @@ std::string Board::ToFEN() {
       }
 
       constexpr int upper = 'A' - 'a';
-      const bool is_white = static_cast<bool>(this->squares[rank][file] & Piece::IS_WHITE);
+      const bool is_white = this->squares[rank][file] & Piece::IS_WHITE;
       const int add_case = is_white ? upper : 0;
 
-      if (static_cast<bool>(this->squares[rank][file] & Piece::PAWN)) {
+      if (this->squares[rank][file] & Piece::PAWN) {
         output.push_back('p' + add_case);
       }
-      else if (static_cast<bool>(this->squares[rank][file] & Piece::KNIGHT)) {
+      else if (this->squares[rank][file] & Piece::KNIGHT) {
         output.push_back('n' + add_case);
       }
-      else if (static_cast<bool>(this->squares[rank][file] & Piece::BISHOP)) {
+      else if (this->squares[rank][file] & Piece::BISHOP) {
         output.push_back('b' + add_case);
       }
-      else if (static_cast<bool>(this->squares[rank][file] & Piece::ROOK)) {
+      else if (this->squares[rank][file] & Piece::ROOK) {
         output.push_back('r' + add_case);
       }
-      else if (static_cast<bool>(this->squares[rank][file] & Piece::QUEEN)) {
+      else if (this->squares[rank][file] & Piece::QUEEN) {
         output.push_back('q' + add_case);
       }
-      else if (static_cast<bool>(this->squares[rank][file] & Piece::KING)) {
+      else if (this->squares[rank][file] & Piece::KING) {
         output.push_back('k' + add_case);
       }
     }
@@ -176,16 +176,16 @@ std::string Board::ToFEN() {
 
   // Castling
   output.push_back(' ');
-  if (static_cast<bool>(this->castling[0] & Castling::SHORT)) {
+  if (this->castling[0] & Castling::SHORT) {
     output.push_back('K');
   }
-  if (static_cast<bool>(this->castling[0] & Castling::LONG)) {
+  if (this->castling[0] & Castling::LONG) {
     output.push_back('Q');
   }
-  if (static_cast<bool>(this->castling[1] & Castling::SHORT)) {
+  if (this->castling[1] & Castling::SHORT) {
     output.push_back('k');
   }
-  if (static_cast<bool>(this->castling[1] & Castling::LONG)) {
+  if (this->castling[1] & Castling::LONG) {
     output.push_back('q');
   }
 

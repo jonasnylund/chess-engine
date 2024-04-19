@@ -16,8 +16,8 @@ enum class Piece : uint8_t {
 constexpr enum Piece operator |(const enum Piece lhs, const enum Piece rhs) {
   return static_cast<Piece>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
 }
-constexpr enum Piece operator &(const enum Piece lhs, const enum Piece rhs) {
-  return static_cast<Piece>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
+constexpr uint8_t operator &(const enum Piece lhs, const enum Piece rhs) {
+  return static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs);
 }
 
 enum class Castling : uint8_t {
@@ -29,8 +29,8 @@ enum class Castling : uint8_t {
 constexpr enum Castling operator |(const enum Castling lhs, const enum Castling rhs) {
   return static_cast<Castling>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
 }
-constexpr enum Castling operator &(const enum Castling lhs, const enum Castling rhs) {
-  return static_cast<Castling>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
+constexpr uint8_t operator &(const enum Castling lhs, const enum Castling rhs) {
+  return static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs);
 }
 
 struct SquareIndex {
