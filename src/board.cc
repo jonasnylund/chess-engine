@@ -135,7 +135,7 @@ std::string Board::ToFEN() {
 
       constexpr int upper = 'A' - 'a';
       const bool is_white = static_cast<bool>(this->squares[rank][file] & Piece::IS_WHITE);
-      const int add_case = is_white ? 0 : upper;
+      const int add_case = is_white ? upper : 0;
 
       if (static_cast<bool>(this->squares[rank][file] & Piece::PAWN)) {
         output.push_back('p' + add_case);
