@@ -35,7 +35,6 @@ void Board::Move(SquareIndex from, SquareIndex to, Piece promotion, Castling cas
   const bool is_pawn_move = this->squares[from.rank][from.file] & Piece::PAWN;
   const bool is_king_move = this->squares[from.rank][from.file] & Piece::KING;
   bool is_capturing_move = this->squares[to.rank][to.file] != Piece::EMPTY;
-  Piece captured_piece = this->squares[to.rank][to.file];
 
   if (
     is_pawn_move && 
@@ -48,16 +47,14 @@ void Board::Move(SquareIndex from, SquareIndex to, Piece promotion, Castling cas
     const int8_t capture_file = to.file;
     const int8_t capture_rank = from.rank;
     is_capturing_move = true;
-    captured_piece = this->squares[capture_rank][capture_rank];
     this->squares[capture_rank][capture_rank] = Piece::EMPTY;
   }
   else if (is_king_move && castling != Castling::NO_CASTLING) {
     is_capturing_move = false;
-    captured_piece = Piece::EMPTY;
   }
   else if (
     is_capturing_move &&
-    captured_piece & Piece::ROOK &&
+    this->squares[from.rank][from.file] & Piece::ROOK &&
     this->castling[this->white_to_move] != Castling::NO_CASTLING
   ) {
     // Check if the captured piece revokes castling rights.
@@ -74,6 +71,29 @@ void Board::Move(SquareIndex from, SquareIndex to, Piece promotion, Castling cas
     ) {
       this->castling[this->white_to_move] = static_cast<Castling>(
         this->castling[this->white_to_move] & (!castling));
+    }
+  }
+  if (
+    this->squares[from.rank][from.file] & Piece::ROOK &&
+    this->castling[!this->white_to_move] != Castling::NO_CASTLING
+  ) {
+    // Rook move revokes castling rights to that side.
+    const int8_t starting_rank = this->white_to_move ? 0 : 7;
+    if (
+      from.rank == starting_rank &&
+      from.file == this->kingside_rook_start_file
+    ) {
+      this->castling[!this->white_to_move] = static_cast<Castling>(
+        this->castling[!this->white_to_move] & !Castling::KINGSIDE
+      );
+    }
+    else if (
+      from.rank == starting_rank &&
+      from.file == this->queenside_rook_start_file
+    ) {
+      this->castling[!this->white_to_move] = static_cast<Castling>(
+        this->castling[!this->white_to_move] & !Castling::QUEENSIDE
+      );
     }
   }
 
