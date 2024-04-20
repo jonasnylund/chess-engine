@@ -22,8 +22,8 @@ constexpr uint8_t operator &(const enum Piece lhs, const enum Piece rhs) {
 
 enum class Castling : uint8_t {
   NO_CASTLING = 0,
-  SHORT = 1,
-  LONG = 2,
+  KINGSIDE = 1,
+  QUEENSIDE = 2,
 };
 
 constexpr enum Castling operator |(const enum Castling lhs, const enum Castling rhs) {
@@ -32,10 +32,13 @@ constexpr enum Castling operator |(const enum Castling lhs, const enum Castling 
 constexpr uint8_t operator &(const enum Castling lhs, const enum Castling rhs) {
   return static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs);
 }
+constexpr enum Castling operator !(const enum Castling v) {
+  return static_cast<Castling>(!static_cast<uint8_t>(v));
+}
 
 struct SquareIndex {
-  uint8_t file;
-  uint8_t rank;
+  int8_t file;
+  int8_t rank;
 };
 
 class Board {
@@ -43,14 +46,31 @@ class Board {
   Board() = default;
   ~Board() = default;
 
+  inline void Move(SquareIndex from, SquareIndex to) {
+    Move(from, to, Piece::EMPTY, Castling::NO_CASTLING);
+  }
+  inline void Move(SquareIndex from, SquareIndex to, Piece promotion) {
+    Move(from, to, promotion, Castling::NO_CASTLING);
+  }
+  inline void Move(SquareIndex from, SquareIndex to, Castling castling) {
+    Move(from, to, Piece::EMPTY, castling);
+  }
+
   // Set up a position from a FEN notation string.
   static Board FromFEN(const std::string& fen);
   // Write the current position to FEN notation.
-  std::string ToFEN();
+  std::string ToFEN() const;
 
+  inline Piece Get(int8_t file, int8_t rank) const {
+    return this->squares[rank][file];
+  }
  private:
+  void Move(SquareIndex from, SquareIndex to, Piece promotion, Castling castling);
+
   Piece squares[8][8];
   Castling castling[2];
+  int8_t queenside_rook_start_file = 0;
+  int8_t kingside_rook_start_file = 7;
   std::optional<SquareIndex> en_passent;
   bool white_to_move;
   int halfmove_clock = 0;

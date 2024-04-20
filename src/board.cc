@@ -7,14 +7,142 @@
 #include <iostream>
 #include <optional>
 
+
+namespace {
+
+int8_t RookPosition(const Board& board, Castling side, int8_t rank) {
+  if (side == Castling::QUEENSIDE) {
+    for (int8_t i = 0; i < 8; i++) {
+      if (board.Get(i, rank) & Piece::ROOK) {
+        return i;
+      }
+    }
+  }
+  else {
+    for (int8_t i = 7; i >=0; i--) {
+      if (board.Get(i, rank) & Piece::ROOK) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+
+}  // namespace
+
+
+void Board::Move(SquareIndex from, SquareIndex to, Piece promotion, Castling castling) {
+  const bool is_pawn_move = this->squares[from.rank][from.file] & Piece::PAWN;
+  const bool is_king_move = this->squares[from.rank][from.file] & Piece::KING;
+  bool is_capturing_move = this->squares[to.rank][to.file] != Piece::EMPTY;
+  Piece captured_piece = this->squares[to.rank][to.file];
+
+  if (
+    is_pawn_move && 
+    this->en_passent.has_value() &&
+    to.file == this->en_passent->file && 
+    to.rank == this->en_passent->rank
+  ) {
+    // En passent capture is complicated, as we don't capture on the
+    // target square.
+    const int8_t capture_file = to.file;
+    const int8_t capture_rank = from.rank;
+    is_capturing_move = true;
+    captured_piece = this->squares[capture_rank][capture_rank];
+    this->squares[capture_rank][capture_rank] = Piece::EMPTY;
+  }
+  else if (is_king_move && castling != Castling::NO_CASTLING) {
+    is_capturing_move = false;
+    captured_piece = Piece::EMPTY;
+  }
+  else if (
+    is_capturing_move &&
+    captured_piece & Piece::ROOK &&
+    this->castling[this->white_to_move] != Castling::NO_CASTLING
+  ) {
+    // Check if the captured piece revokes castling rights.
+    // Starting rank of the captured rook.
+    const int8_t starting_rank = this->white_to_move ? 7 : 0;
+    const int8_t starting_file = (
+      castling == Castling::KINGSIDE ?
+        this->kingside_rook_start_file :
+        this->queenside_rook_start_file
+    );
+    if (
+      to.rank == starting_rank &&
+      to.file == starting_file
+    ) {
+      this->castling[this->white_to_move] = static_cast<Castling>(
+        this->castling[this->white_to_move] & (!castling));
+    }
+  }
+
+  // Move the piece. Castling requires special treatment.
+  if (is_king_move && castling != Castling::NO_CASTLING) {
+    const int8_t rook_file = (
+      castling == Castling::KINGSIDE ? 
+      this->kingside_rook_start_file : 
+      this->queenside_rook_start_file
+    );
+    const int8_t rook_target_file = (
+      castling == Castling::KINGSIDE ? to.file - 1 : to.file + 1
+    );
+    // Remove the rook
+    Piece moving_rook = this->squares[from.rank][rook_file];
+    this->squares[from.rank][rook_file] = Piece::EMPTY;
+    // Move the king.
+    this->squares[to.rank][to.file] = this->squares[from.rank][from.file];
+    this->squares[from.rank][from.file] = Piece::EMPTY;
+    // Place the rook after moving the king.
+    this->squares[to.rank][rook_target_file] = moving_rook;
+  }
+  else {
+    // Just move the piece to the new file.
+    this->squares[to.rank][to.file] = this->squares[from.rank][from.file];
+    this->squares[from.rank][from.file] = Piece::EMPTY;
+  }
+
+  if (is_pawn_move && promotion != Piece::EMPTY) {
+    this->squares[to.rank][to.file] = promotion;
+  }
+  if (
+    is_pawn_move &&
+    to.file == from.file &&
+    std::abs(to.rank - from.rank) == 2
+  ) {
+    // Pawn move 2 steps forward, need to set en passent flags.
+    const SquareIndex ep = {.file = to.file, .rank = static_cast<int8_t>((to.rank + from.rank) / 2)};
+    this->en_passent = ep;
+  }
+  else {
+    this->en_passent = std::nullopt;
+  }
+
+  if (is_king_move) {
+    // Castling no longer allowed.
+    this->castling[!this->white_to_move] = Castling::NO_CASTLING;
+  }
+
+  if (is_capturing_move || is_pawn_move) {
+    this->halfmove_clock = 0;
+  }
+  else {
+    this->halfmove_clock++;
+  }
+  this->white_to_move = !this->white_to_move;
+  if (this->white_to_move) {
+    this->fullmove_clock++;
+  }
+}
+
 Board Board::FromFEN(const std::string& fen) {
   Board board;
   memset(board.squares, 0, sizeof(board.squares));
   memset(board.castling, 0, sizeof(board.castling));
 
   int chars_read = 0;
-  uint8_t rank = 7;
-  uint8_t file = 0;
+  int8_t rank = 7;
+  int8_t file = 0;
 
   // Read position of pieces.
   for (char c : fen) {
@@ -72,20 +200,32 @@ Board Board::FromFEN(const std::string& fen) {
   // Castling priviliges.
   while (++chars_read < fen.size()) {
     if (fen.at(chars_read) == 'K') {
-      board.castling[0] = board.castling[0] | Castling::SHORT;
+      board.castling[0] = board.castling[0] | Castling::KINGSIDE;
     }
     else if (fen.at(chars_read) == 'Q') {
-      board.castling[0] = board.castling[0] | Castling::LONG;
+      board.castling[0] = board.castling[0] | Castling::QUEENSIDE;
     }
     else if (fen.at(chars_read) == 'k') {
-      board.castling[1] = board.castling[1] | Castling::SHORT;
+      board.castling[1] = board.castling[1] | Castling::KINGSIDE;
     }
     else if (fen.at(chars_read) == 'q') {
-      board.castling[1] = board.castling[1] | Castling::LONG;
+      board.castling[1] = board.castling[1] | Castling::QUEENSIDE;
     }
     else if (fen.at(chars_read) == ' ') {
       break;
     }
+  }
+  if (board.castling[0] & Castling::KINGSIDE) {
+    board.kingside_rook_start_file = RookPosition(board, Castling::KINGSIDE, 0);
+  }
+  else if(board.castling[1] & Castling::KINGSIDE) {
+    board.kingside_rook_start_file = RookPosition(board, Castling::KINGSIDE, 7);
+  }
+  if (board.castling[0] & Castling::QUEENSIDE) {
+    board.queenside_rook_start_file = RookPosition(board, Castling::QUEENSIDE, 0);
+  }
+  else if(board.castling[1] & Castling::QUEENSIDE) {
+    board.queenside_rook_start_file = RookPosition(board, Castling::QUEENSIDE, 7);
   }
 
   // En passént
@@ -118,7 +258,7 @@ Board Board::FromFEN(const std::string& fen) {
   return board;
 }
 
-std::string Board::ToFEN() {
+std::string Board::ToFEN() const {
   std::string output;
   output.reserve(64);
 
@@ -176,16 +316,16 @@ std::string Board::ToFEN() {
 
   // Castling
   output.push_back(' ');
-  if (this->castling[0] & Castling::SHORT) {
+  if (this->castling[0] & Castling::KINGSIDE) {
     output.push_back('K');
   }
-  if (this->castling[0] & Castling::LONG) {
+  if (this->castling[0] & Castling::QUEENSIDE) {
     output.push_back('Q');
   }
-  if (this->castling[1] & Castling::SHORT) {
+  if (this->castling[1] & Castling::KINGSIDE) {
     output.push_back('k');
   }
-  if (this->castling[1] & Castling::LONG) {
+  if (this->castling[1] & Castling::QUEENSIDE) {
     output.push_back('q');
   }
 
