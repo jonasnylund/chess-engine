@@ -234,6 +234,11 @@ Board Board::FromFEN(const std::string& fen) {
     else if (fen.at(chars_read) == ' ') {
       break;
     }
+    else {
+      // Already at en passent, rewind.
+      chars_read--;
+      break;
+    }
   }
   if (board.castling[0] & Castling::KINGSIDE) {
     board.kingside_rook_start_file = RookPosition(board, Castling::KINGSIDE, 0);
@@ -335,7 +340,12 @@ std::string Board::ToFEN() const {
   }
 
   // Castling
-  output.push_back(' ');
+  if (
+    this->castling[0] != Castling::NO_CASTLING ||
+    this->castling[1] != Castling::NO_CASTLING
+  ) {
+    output.push_back(' ');
+  }
   if (this->castling[0] & Castling::KINGSIDE) {
     output.push_back('K');
   }
