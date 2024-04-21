@@ -416,8 +416,24 @@ void Board::Print(std::ostream& stream) const {
     stream << std::endl;
     stream << " +---+---+---+---+---+---+---+---+" << std::endl;
   }
-  stream << this->halfmove_clock << ", " << this->fullmove_clock << std::endl;
-  if (this->white_to_move) {
-    stream << "White to move" << std::endl;
+  if (this->castling[0] & Castling::KINGSIDE) {
+    stream << 'K';
   }
+  if (this->castling[0] & Castling::QUEENSIDE) {
+    stream << 'Q';
+  }
+  if (this->castling[1] & Castling::KINGSIDE) {
+    stream << 'k';
+  }
+  if (this->castling[1] & Castling::QUEENSIDE) {
+    stream << 'q';
+  }
+  stream << " " <<  this->halfmove_clock << ", " << this->fullmove_clock << std::endl;
+  if (this->white_to_move) {
+    stream << "White";
+  }
+  else {
+    stream << "Black";
+  }
+  stream << " to move" << std::endl;
 }

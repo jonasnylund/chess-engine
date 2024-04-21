@@ -68,6 +68,10 @@ class Board {
   inline Piece Get(int8_t file, int8_t rank) const {
     return this->squares[rank][file];
   }
+  inline bool WhiteToMove() const {
+    return this->white_to_move;
+  }
+
  private:
   void Move(SquareIndex from, SquareIndex to, Piece promotion, Castling castling);
 
