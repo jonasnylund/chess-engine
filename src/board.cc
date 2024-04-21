@@ -416,6 +416,12 @@ void Board::Print(std::ostream& stream) const {
     stream << std::endl;
     stream << " +---+---+---+---+---+---+---+---+" << std::endl;
   }
+  if (this->en_passent.has_value()) {
+    stream << static_cast<char>(this->en_passent->file + 'a') << this->en_passent->rank + 1 << " ";
+  }
+  else {
+    stream << "- ";
+  }
   if (this->castling[0] & Castling::KINGSIDE) {
     stream << 'K';
   }
