@@ -3,8 +3,10 @@
 #include <algorithm>
 #include <iostream>
 #include <tuple>
+#include <vector>
 
 #include "board.h"
+#include "moves.h"
 #include "pieces.h"
 
 namespace {
@@ -70,10 +72,37 @@ std::tuple<SquareIndex, SquareIndex, Castling, Piece> GetMove(const Board& b) {
   return {from, to, castling, promotion};
 }
 
+// For debugging
+void PrintAvailableMoves(const Board& board) {
+  const bool white_to_move = board.WhiteToMove();
+  std::optional<SquareIndex> current = board.NextOccupied(
+    {.file = -1, .rank = 0}, white_to_move);
+  std::cout << current.has_value() << ", " << white_to_move << std::endl;
+  while (current.has_value()) {
+    const Piece piece = board.Get(current->file, current->rank);
+    std::vector<Move> moves = PossibleMoves(board, piece, *current);
+
+    std::cout << static_cast<char>(current->file + 'a') << current->rank + 1 << " ->";
+    for (const Move& move : moves) {
+      std::cout << " " << static_cast<char>(move.to.file + 'a') << move.to.rank + 1;
+      if (move.promotion != Piece::EMPTY) {
+        if (move.promotion & Piece::QUEEN)
+          std::cout << "=q";
+        else if (move.promotion & Piece::KNIGHT)
+          std::cout << "=n";
+      }
+    }
+    std::cout << std::endl;
+
+    current = board.NextOccupied(*current, white_to_move);
+  }
+}
+
 }  // namespace
 
 int main(int argc, char** argv){
   std::string starting_pos;
+  std::cout << "Starting position (leave empty for default):" << std::endl;
   getline(std::cin, starting_pos);
   if (starting_pos.empty()) {
     starting_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -83,6 +112,8 @@ int main(int argc, char** argv){
 
   while (true) {
     b.Print(std::cout);
+    PrintAvailableMoves(b);
+
     const auto [from, to, castling, promotion] = GetMove(b);
 
     if (castling != Castling::NO_CASTLING) {

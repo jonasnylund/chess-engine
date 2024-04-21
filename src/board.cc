@@ -163,13 +163,6 @@ void Board::Move(SquareIndex from, SquareIndex to, Piece promotion, Castling cas
 std::optional<SquareIndex> Board::NextOccupied(
 	SquareIndex square, bool white) const {
 	while (true) {
-		const Piece current_piece = this->squares[square.file][square.rank];
-		if (
-			current_piece != Piece::EMPTY &&
-			(current_piece & Piece::IS_WHITE) == white
-		) {
-			return square;
-		}
 		// Increment position;
 		if (++square.file >= 8) {
 			square.file = 0;
@@ -177,11 +170,18 @@ std::optional<SquareIndex> Board::NextOccupied(
 				return std::nullopt;
 			}
 		}
+		const Piece current_piece = this->Get(square.file, square.rank);
+		if (
+			current_piece != Piece::EMPTY &&
+			static_cast<bool>(current_piece & Piece::IS_WHITE) == white
+		) {
+			return square;
+		}
 	}
 }
 
 bool Board::IsInCheck(bool white) const {
-  std::optional<SquareIndex> kings_square = SquareIndex({.file = 0, .rank = 0});
+  std::optional<SquareIndex> kings_square = SquareIndex({.file = -1, .rank = 0});
   const Piece king = Piece::KING | (white ? Piece::IS_WHITE : Piece::EMPTY);
   // Find square of the king
   while (
@@ -196,7 +196,7 @@ bool Board::IsInCheck(bool white) const {
   const int8_t kings_file = kings_square->file;
   const int8_t kings_rank = kings_square->rank;
 
-  std::optional<SquareIndex> piece_square = this->NextOccupied({.file = 0, .rank = 0}, !white);
+  std::optional<SquareIndex> piece_square = this->NextOccupied({.file = -1, .rank = 0}, !white);
   while (piece_square.has_value()) {
     const int8_t file = piece_square->file;
     const int8_t rank = piece_square->rank;
@@ -212,9 +212,6 @@ bool Board::IsInCheck(bool white) const {
       }
     }
 
-    if (++piece_square->file >= 8) {
-      piece_square->rank++;
-    }
     piece_square = this->NextOccupied(piece_square.value(), !white);
   }
 

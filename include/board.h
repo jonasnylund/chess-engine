@@ -70,6 +70,9 @@ class Board {
   inline bool WhiteToMove() const {
     return this->white_to_move;
   }
+  inline std::optional<SquareIndex> EnPassantSquare() const {
+    return this->en_passent;
+  }
 
  private:
   void Move(SquareIndex from, SquareIndex to, Piece promotion, Castling castling);
