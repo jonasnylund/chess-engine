@@ -1,25 +1,11 @@
+#ifndef CHESSENGINE_BOARD_H
+#define CHESSENGINE_BOARD_H
 
 #include <cstdint>
 #include <optional>
 #include <string>
 
-enum class Piece : uint8_t {
-  EMPTY = 0,
-  PAWN = 1,
-  KNIGHT = 2,
-  BISHOP = 4,
-  ROOK = 8,
-  QUEEN = 16,
-  KING = 32,
-  IS_WHITE = 64,
-};
-
-constexpr enum Piece operator |(const enum Piece lhs, const enum Piece rhs) {
-  return static_cast<Piece>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
-}
-constexpr uint8_t operator &(const enum Piece lhs, const enum Piece rhs) {
-  return static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs);
-}
+#include "pieces.h"
 
 enum class Castling : uint8_t {
   NO_CASTLING = 0,
@@ -47,6 +33,11 @@ class Board {
   Board() = default;
   ~Board() = default;
 
+  Board(const Board& board) = default;
+  Board(Board&& board) = default;
+  Board& operator=(const Board& board) = default;
+  Board& operator=(Board&& board) = default;
+
   inline void Move(SquareIndex from, SquareIndex to) {
     Move(from, to, Piece::EMPTY, Castling::NO_CASTLING);
   }
@@ -56,6 +47,14 @@ class Board {
   inline void Move(SquareIndex from, SquareIndex to, Castling castling) {
     Move(from, to, Piece::EMPTY, castling);
   }
+
+  // Returns the next unoccupied square after 
+  std::optional<SquareIndex> NextOccupied(
+    SquareIndex square, bool white) const;
+
+  // Returns true if the (a) king of the given color is in check
+  // in the current position.
+  bool IsInCheck(bool white) const;
 
   // Set up a position from a FEN notation string.
   static Board FromFEN(const std::string& fen);
@@ -84,3 +83,5 @@ class Board {
   int halfmove_clock = 0;
   int fullmove_clock = 0;
 };
+
+#endif

@@ -8,6 +8,8 @@
 #include <optional>
 #include <string>
 
+#include "pieces.h"
+
 
 namespace {
 
@@ -156,6 +158,68 @@ void Board::Move(SquareIndex from, SquareIndex to, Piece promotion, Castling cas
   if (this->white_to_move) {
     this->fullmove_clock++;
   }
+}
+
+std::optional<SquareIndex> Board::NextOccupied(
+	SquareIndex square, bool white) const {
+	while (true) {
+		const Piece current_piece = this->squares[square.file][square.rank];
+		if (
+			current_piece != Piece::EMPTY &&
+			(current_piece & Piece::IS_WHITE) == white
+		) {
+			return square;
+		}
+		// Increment position;
+		if (++square.file >= 8) {
+			square.file = 0;
+			if (++square.rank >= 8) {
+				return std::nullopt;
+			}
+		}
+	}
+}
+
+bool Board::IsInCheck(bool white) const {
+  std::optional<SquareIndex> kings_square = SquareIndex({.file = 0, .rank = 0});
+  const Piece king = Piece::KING | (white ? Piece::IS_WHITE : Piece::EMPTY);
+  // Find square of the king
+  while (
+    kings_square.has_value() &&
+    this->Get(kings_square->file, kings_square->rank) != king
+  ) {
+    if (++kings_square->file >= 8) {
+      kings_square->rank++;
+    }
+    kings_square = this->NextOccupied(*kings_square, white);
+  }
+  const int8_t kings_file = kings_square->file;
+  const int8_t kings_rank = kings_square->rank;
+
+  std::optional<SquareIndex> piece_square = this->NextOccupied({.file = 0, .rank = 0}, !white);
+  while (piece_square.has_value()) {
+    const int8_t file = piece_square->file;
+    const int8_t rank = piece_square->rank;
+    const Piece piece = this->Get(file, rank);
+
+    if (piece & Piece::PAWN) {
+      const int8_t attacked_rank = (white ? rank - 1 : rank + 1);
+      if (
+        kings_rank == attacked_rank &&
+        (kings_file == file - 1 || kings_file == file + 1)
+      ) {
+        return true;
+      }
+    }
+
+    if (++piece_square->file >= 8) {
+      piece_square->rank++;
+    }
+    piece_square = this->NextOccupied(piece_square.value(), !white);
+  }
+
+
+  return false;
 }
 
 Board Board::FromFEN(const std::string& fen) {
