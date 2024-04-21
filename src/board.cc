@@ -416,4 +416,8 @@ void Board::Print(std::ostream& stream) const {
     stream << std::endl;
     stream << " +---+---+---+---+---+---+---+---+" << std::endl;
   }
+  stream << this->halfmove_clock << ", " << this->fullmove_clock << std::endl;
+  if (this->white_to_move) {
+    stream << "White to move" << std::endl;
+  }
 }
