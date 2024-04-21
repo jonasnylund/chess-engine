@@ -72,9 +72,13 @@ std::tuple<SquareIndex, SquareIndex, Castling, Piece> GetMove(const Board& b) {
 }  // namespace
 
 int main(int argc, char** argv){
-  const std::string default_start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  std::string starting_pos;
+  getline(std::cin, starting_pos);
+  if (starting_pos.empty()) {
+    starting_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  }
 
-  Board b = Board::FromFEN(default_start_pos);
+  Board b = Board::FromFEN(starting_pos);
 
   while (true) {
     b.Print(std::cout);
