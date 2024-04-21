@@ -1,6 +1,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <string>
 
 enum class Piece : uint8_t {
   EMPTY = 0,
@@ -60,6 +61,9 @@ class Board {
   static Board FromFEN(const std::string& fen);
   // Write the current position to FEN notation.
   std::string ToFEN() const;
+
+  // Prints the game board to e.g. std::cout.
+  void Print(std::ostream& stream) const;
 
   inline Piece Get(int8_t file, int8_t rank) const {
     return this->squares[rank][file];

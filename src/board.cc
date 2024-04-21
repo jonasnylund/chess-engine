@@ -1,11 +1,12 @@
 #include "board.h"
 
 #include <cassert>
-#include <cctype>
 #include <cstring>
+#include <cctype>
 #include <cstdint>
 #include <iostream>
 #include <optional>
+#include <string>
 
 
 namespace {
@@ -299,9 +300,8 @@ std::string Board::ToFEN() const {
         empty_count = 0;
       }
 
-      constexpr int upper = 'A' - 'a';
       const bool is_white = this->squares[rank][file] & Piece::IS_WHITE;
-      const int add_case = is_white ? upper : 0;
+      const int add_case = is_white ? 'A' - 'a' : 0;
 
       if (this->squares[rank][file] & Piece::PAWN) {
         output.push_back('p' + add_case);
@@ -380,4 +380,40 @@ std::string Board::ToFEN() const {
   for (const char ch : clock) output.push_back(ch);
 
   return output;
+}
+
+void Board::Print(std::ostream& stream) const {
+  stream << " +-a-+-b-+-c-+-d-+-e-+-f-+-g-+-h-+" << std::endl;
+  for (int8_t rank = 7; rank >= 0; rank--) {
+    stream << rank + 1 << "| ";
+    for (int8_t file = 0; file < 8; file++) {
+      const bool is_white = this->squares[rank][file] & Piece::IS_WHITE;
+      const int add_case = is_white ? 'A' - 'a' : 0;
+
+      if (this->squares[rank][file] & Piece::PAWN) {
+        stream << static_cast<char>('p' + add_case);
+      }
+      else if (this->squares[rank][file] & Piece::KNIGHT) {
+        stream << static_cast<char>('n' + add_case);
+      }
+      else if (this->squares[rank][file] & Piece::BISHOP) {
+        stream << static_cast<char>('b' + add_case);
+      }
+      else if (this->squares[rank][file] & Piece::ROOK) {
+        stream << static_cast<char>('r' + add_case);
+      }
+      else if (this->squares[rank][file] & Piece::QUEEN) {
+        stream << static_cast<char>('q' + add_case);
+      }
+      else if (this->squares[rank][file] & Piece::KING) {
+        stream << static_cast<char>('k' + add_case);
+      }
+      else {
+        stream << ' ';
+      }
+      stream << " | ";
+    }
+    stream << std::endl;
+    stream << " +---+---+---+---+---+---+---+---+" << std::endl;
+  }
 }
