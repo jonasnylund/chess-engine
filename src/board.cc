@@ -48,30 +48,32 @@ void Board::Move(SquareIndex from, SquareIndex to, Piece promotion, Castling cas
     const int8_t capture_file = to.file;
     const int8_t capture_rank = from.rank;
     is_capturing_move = true;
-    this->squares[capture_rank][capture_rank] = Piece::EMPTY;
+    this->squares[capture_rank][capture_file] = Piece::EMPTY;
   }
   else if (is_king_move && castling != Castling::NO_CASTLING) {
     is_capturing_move = false;
   }
   else if (
     is_capturing_move &&
-    this->squares[from.rank][from.file] & Piece::ROOK &&
+    this->squares[to.rank][to.file] & Piece::ROOK &&
     this->castling[this->white_to_move] != Castling::NO_CASTLING
   ) {
     // Check if the captured piece revokes castling rights.
     // Starting rank of the captured rook.
     const int8_t starting_rank = this->white_to_move ? 7 : 0;
-    const int8_t starting_file = (
-      castling == Castling::KINGSIDE ?
-        this->kingside_rook_start_file :
-        this->queenside_rook_start_file
-    );
     if (
       to.rank == starting_rank &&
-      to.file == starting_file
+      to.file == this->kingside_rook_start_file
     ) {
       this->castling[this->white_to_move] = static_cast<Castling>(
-        this->castling[this->white_to_move] & (!castling));
+        this->castling[this->white_to_move] & ~Castling::KINGSIDE);
+    }
+    else if (
+      to.rank == starting_rank &&
+      to.file == this->queenside_rook_start_file
+    ) {
+      this->castling[this->white_to_move] = static_cast<Castling>(
+        this->castling[this->white_to_move] & ~Castling::QUEENSIDE);
     }
   }
   if (
@@ -85,7 +87,7 @@ void Board::Move(SquareIndex from, SquareIndex to, Piece promotion, Castling cas
       from.file == this->kingside_rook_start_file
     ) {
       this->castling[!this->white_to_move] = static_cast<Castling>(
-        this->castling[!this->white_to_move] & !Castling::KINGSIDE
+        this->castling[!this->white_to_move] & ~Castling::KINGSIDE
       );
     }
     else if (
@@ -93,7 +95,7 @@ void Board::Move(SquareIndex from, SquareIndex to, Piece promotion, Castling cas
       from.file == this->queenside_rook_start_file
     ) {
       this->castling[!this->white_to_move] = static_cast<Castling>(
-        this->castling[!this->white_to_move] & !Castling::QUEENSIDE
+        this->castling[!this->white_to_move] & ~Castling::QUEENSIDE
       );
     }
   }

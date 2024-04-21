@@ -33,8 +33,8 @@ constexpr enum Castling operator |(const enum Castling lhs, const enum Castling 
 constexpr uint8_t operator &(const enum Castling lhs, const enum Castling rhs) {
   return static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs);
 }
-constexpr enum Castling operator !(const enum Castling v) {
-  return static_cast<Castling>(!static_cast<uint8_t>(v));
+constexpr enum Castling operator ~(const enum Castling v) {
+  return static_cast<Castling>(~static_cast<uint8_t>(v));
 }
 
 struct SquareIndex {
