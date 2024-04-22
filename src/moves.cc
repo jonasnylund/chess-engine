@@ -166,6 +166,16 @@ std::vector<Move> RookMove(const Board& board, Piece piece, SquareIndex from) {
 	return output;
 }
 
+std::vector<Move> QueenMove(const Board& board, Piece piece, SquareIndex from) {
+	std::vector<Move> moves1 = BishopMove(board, piece, from);
+	std::vector<Move> moves2 = RookMove(board, piece, from);
+	std::vector<Move>* longest = (moves1.size() > moves2.size() ? &moves1 : &moves2);
+	std::vector<Move>* shorter = (moves1.size() < moves2.size() ? &moves1 : &moves2);
+	longest->reserve(longest->size() + shorter->size());
+	longest->insert(longest->end(), shorter->begin(), shorter->end());
+	return *longest;
+}
+
 }  // namespace
 
 std::vector<Move> PossibleMoves(const Board& board, Piece piece, SquareIndex from) {
@@ -180,6 +190,9 @@ std::vector<Move> PossibleMoves(const Board& board, Piece piece, SquareIndex fro
 	}
 	else if (piece & Piece::ROOK) {
 		return RookMove(board, piece, from);
+	}
+	else if (piece & Piece::QUEEN) {
+		return QueenMove(board, piece, from);
 	}
 
 	return {};
