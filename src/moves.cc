@@ -179,6 +179,34 @@ std::vector<Move> QueenMove(const Board& board, Piece piece, SquareIndex from) {
 	return *longest;
 }
 
+std::vector<Move> KingMove(const Board& board, Piece piece, SquareIndex from) {
+	std::vector<Move> output;
+	const bool is_white = piece & Piece::IS_WHITE;
+
+	// Normal moves.
+	for (int i = -1; i <= 1; i++) {
+		for (int j = -1; j <= 1; j++) {
+			if (i == 0 && j == 0) continue;
+
+			const SquareIndex to = {
+				.file = static_cast<int8_t>(from.file + j),
+				.rank = static_cast<int8_t>(from.rank + i),
+			};
+			if (to.rank < 0 || to.rank > 7)
+				continue;
+			if (to.file < 0 || to.file > 7)
+				continue;
+			if (IsEmpty(board, to.file, to.rank) ||
+					CanCapture(board, is_white, to.file, to.rank))
+				output.push_back({.from = from, .to = to});
+		}
+	}
+	// Castling moves
+	// ...
+
+	return output;
+}
+
 }  // namespace
 
 std::vector<Move> PossibleMoves(const Board& board, Piece piece, SquareIndex from) {
