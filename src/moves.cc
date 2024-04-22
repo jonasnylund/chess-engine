@@ -135,6 +135,37 @@ std::vector<Move> BishopMove(const Board& board, Piece piece, SquareIndex from) 
 	return output;
 }
 
+std::vector<Move> RookMove(const Board& board, Piece piece, SquareIndex from) {
+	std::vector<Move> output;
+	const bool is_white = piece & Piece::IS_WHITE;
+
+	for (int i = -1; i <= 1; i += 2) {
+		for (int j = 0; j <= 1; j++) {
+			const int file = i * j;
+			const int rank = i * (j - 1);
+			for (int step = 1; step < 8; step++) {
+				const SquareIndex to = {
+					.file = static_cast<int8_t>(from.file + file * step),
+					.rank = static_cast<int8_t>(from.rank + rank * step),
+				};
+				if (to.rank < 0 || to.rank > 7)
+					break;
+				if (to.file < 0 || to.file > 7)
+					break;
+				if (IsEmpty(board, to.file, to.rank)) {
+					output.push_back({.from = from, .to = to});
+				} else if (CanCapture(board, is_white, to.file, to.rank)) {
+					output.push_back({.from = from, .to = to});
+					break;
+				}
+				else break;
+			}
+		}
+	}
+
+	return output;
+}
+
 }  // namespace
 
 std::vector<Move> PossibleMoves(const Board& board, Piece piece, SquareIndex from) {
@@ -147,5 +178,9 @@ std::vector<Move> PossibleMoves(const Board& board, Piece piece, SquareIndex fro
 	else if (piece & Piece::BISHOP) {
 		return BishopMove(board, piece, from);
 	}
+	else if (piece & Piece::ROOK) {
+		return RookMove(board, piece, from);
+	}
+
 	return {};
 }
