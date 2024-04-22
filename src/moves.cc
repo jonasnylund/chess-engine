@@ -169,8 +169,11 @@ std::vector<Move> RookMove(const Board& board, Piece piece, SquareIndex from) {
 std::vector<Move> QueenMove(const Board& board, Piece piece, SquareIndex from) {
 	std::vector<Move> moves1 = BishopMove(board, piece, from);
 	std::vector<Move> moves2 = RookMove(board, piece, from);
-	std::vector<Move>* longest = (moves1.size() > moves2.size() ? &moves1 : &moves2);
-	std::vector<Move>* shorter = (moves1.size() < moves2.size() ? &moves1 : &moves2);
+
+	const bool one_longer = moves1.size() > moves2.size();
+	std::vector<Move>* longest = (one_longer ? &moves1 : &moves2);
+	std::vector<Move>* shorter = (one_longer ? &moves2 : &moves1);
+
 	longest->reserve(longest->size() + shorter->size());
 	longest->insert(longest->end(), shorter->begin(), shorter->end());
 	return *longest;
