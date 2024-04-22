@@ -82,11 +82,38 @@ std::vector<Move> PawnMove(const Board& board, Piece piece, SquareIndex from) {
 	return output;
 }
 
+std::vector<Move> KnightMove(const Board& board, Piece piece, SquareIndex from) {
+	std::vector<Move> output;
+	const bool is_white = piece & Piece::IS_WHITE;
+
+	for (int step = 1; step <= 2; step++) {
+		for (int i = -1; i <= 1; i += 2) {
+			for (int j = -1; j <= 1; j += 2) {
+				const SquareIndex to = {
+					.file = static_cast<int8_t>(from.file + j * (3 - step)),
+					.rank = static_cast<int8_t>(from.rank + i * step),
+				};
+				if (to.rank < 0 || to.rank > 7)
+					continue;
+				if (to.file < 0 || to.file > 7)
+					continue;
+				if (IsEmpty(board, to.file, to.rank) ||
+						CanCapture(board, is_white, to.file, to.rank))
+					output.push_back({.from = from, .to = to});
+			}
+		}
+	}
+	return output;
+}
+
 }  // namespace
 
 std::vector<Move> PossibleMoves(const Board& board, Piece piece, SquareIndex from) {
 	if (piece & Piece::PAWN) {
 		return PawnMove(board, piece, from);
+	}
+	else if (piece & Piece::KNIGHT) {
+		return KnightMove(board, piece, from);
 	}
 	return {};
 }
