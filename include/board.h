@@ -28,6 +28,7 @@ struct SquareIndex {
   int8_t rank;
 };
 
+// Holds the state of the board in the current position.
 class Board {
  public:
   Board() = default;
@@ -52,10 +53,6 @@ class Board {
   std::optional<SquareIndex> NextOccupied(
     SquareIndex square, bool white) const;
 
-  // Returns true if the (a) king of the given color is in check
-  // in the current position.
-  bool IsInCheck(bool white) const;
-
   // Set up a position from a FEN notation string.
   static Board FromFEN(const std::string& fen);
   // Write the current position to FEN notation.
@@ -72,6 +69,15 @@ class Board {
   }
   inline std::optional<SquareIndex> EnPassantSquare() const {
     return this->en_passent;
+  }
+  inline Castling CastlingAllowed(bool white) const {
+    return this->castling[!white];
+  }
+  inline int8_t RookStartingFile(Castling side) const {
+    if (side == Castling::KINGSIDE)
+      return this->kingside_rook_start_file;
+    else
+      return this->queenside_rook_start_file;
   }
 
  private:

@@ -204,10 +204,60 @@ std::vector<Move> KingMove(const Board& board, Piece piece, SquareIndex from) {
 	return output;
 }
 
+std::optional<SquareIndex> CastlingMove(const Board& board, Piece piece, SquareIndex from, Castling side) {
+	const bool is_white = piece & Piece::IS_WHITE;
+	Castling castling = board.CastlingAllowed(is_white);
+
+	if (!(castling & side)) {
+		return std::nullopt;
+	}
+
+	SquareIndex king_target;
+	int8_t rook_target_file;
+	if (side == Castling::KINGSIDE) {
+		king_target = {.file = 6, .rank = from.rank};
+		rook_target_file = king_target.file - 1;
+	}
+	else {
+		king_target = {.file = 2, .rank = from.rank};
+		rook_target_file = king_target.file + 1;
+	}
+	const int8_t rook_file = board.RookStartingFile(side);
+
+	int8_t start = std::min(from.file, king_target.file);
+	int8_t stop = std::max(from.file, king_target.file);
+	for (int8_t file = start; file <= stop; file++) {
+		if (IsAttacked(board, {.file = file, .rank = from.rank}, !is_white)) {
+			// The king cannot castle from, through or into check.
+			return std::nullopt;
+		}
+		else if (!IsEmpty(board, file, from.rank) && file != from.file && file != rook_file) {
+			// The squares that the king travel through must be empty,
+			// apart from by the king itself and the castling rook.
+			return std::nullopt;
+		}
+	}
+	start = std::min(rook_file, rook_target_file);
+	stop = std::max(rook_file, rook_target_file);
+	for (int8_t file = start; file <= stop; file++) {
+		// The squares that the rook travel through must be also empty,
+		// apart from by the king itself and the castling rook. These
+		// squares must not necessarily be the same as the kings in chess960.
+		if (!IsEmpty(board, file, from.rank) && file != from.file && file != rook_file) {
+			return std::nullopt;
+		}
+	}
+
+	return king_target;
+}
+
 }  // namespace
 
-bool IsAttacked(const Board& board, const SquareIndex square, const bool by_white) {
+bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 	std::vector<Move> moves;
+	// Pretend that a piece of the opposite color stands on the given square
+	// and compute the available moves. Then check if one of the moves leads
+	// to a piece of that type.
 	const Piece white = by_white ? Piece::EMPTY : Piece::IS_WHITE;
 
 	moves = PawnMove(board, white, square);
@@ -269,6 +319,20 @@ std::vector<Move> PossibleMoves(
 	}
 	else if (piece & Piece::QUEEN) {
 		return QueenMove(board, piece, from);
+	}
+	else if (piece & Piece::KING) {
+		std::vector<Move> moves = KingMove(board, piece, from);
+		// Castling moves are handled separately.
+		std::optional<SquareIndex> castling;
+		castling = CastlingMove(board, piece, from, Castling::KINGSIDE);
+		if (castling.has_value()) {
+			moves.push_back({.from = from, .to = *castling, .castling=Castling::KINGSIDE});
+		}
+		castling = CastlingMove(board, piece, from, Castling::QUEENSIDE);
+		if (castling.has_value()) {
+			moves.push_back({.from = from, .to = *castling, .castling=Castling::QUEENSIDE});
+		}
+		return moves;
 	}
 
 	return {};

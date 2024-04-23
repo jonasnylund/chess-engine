@@ -180,45 +180,6 @@ std::optional<SquareIndex> Board::NextOccupied(
 	}
 }
 
-bool Board::IsInCheck(bool white) const {
-  std::optional<SquareIndex> kings_square = SquareIndex({.file = -1, .rank = 0});
-  const Piece king = Piece::KING | (white ? Piece::IS_WHITE : Piece::EMPTY);
-  // Find square of the king
-  while (
-    kings_square.has_value() &&
-    this->Get(kings_square->file, kings_square->rank) != king
-  ) {
-    if (++kings_square->file >= 8) {
-      kings_square->rank++;
-    }
-    kings_square = this->NextOccupied(*kings_square, white);
-  }
-  const int8_t kings_file = kings_square->file;
-  const int8_t kings_rank = kings_square->rank;
-
-  std::optional<SquareIndex> piece_square = this->NextOccupied({.file = -1, .rank = 0}, !white);
-  while (piece_square.has_value()) {
-    const int8_t file = piece_square->file;
-    const int8_t rank = piece_square->rank;
-    const Piece piece = this->Get(file, rank);
-
-    if (piece & Piece::PAWN) {
-      const int8_t attacked_rank = (white ? rank - 1 : rank + 1);
-      if (
-        kings_rank == attacked_rank &&
-        (kings_file == file - 1 || kings_file == file + 1)
-      ) {
-        return true;
-      }
-    }
-
-    piece_square = this->NextOccupied(piece_square.value(), !white);
-  }
-
-
-  return false;
-}
-
 Board Board::FromFEN(const std::string& fen) {
   Board board;
   memset(board.squares, 0, sizeof(board.squares));
