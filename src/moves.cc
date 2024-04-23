@@ -183,7 +183,6 @@ std::vector<Move> KingMove(const Board& board, Piece piece, SquareIndex from) {
 	std::vector<Move> output;
 	const bool is_white = piece & Piece::IS_WHITE;
 
-	// Normal moves.
 	for (int i = -1; i <= 1; i++) {
 		for (int j = -1; j <= 1; j++) {
 			if (i == 0 && j == 0) continue;
@@ -201,15 +200,61 @@ std::vector<Move> KingMove(const Board& board, Piece piece, SquareIndex from) {
 				output.push_back({.from = from, .to = to});
 		}
 	}
-	// Castling moves
-	// ...
 
 	return output;
 }
 
 }  // namespace
 
-std::vector<Move> PossibleMoves(const Board& board, Piece piece, SquareIndex from) {
+bool IsAttacked(const Board& board, const SquareIndex square, const bool by_white) {
+	std::vector<Move> moves;
+	const Piece white = by_white ? Piece::EMPTY : Piece::IS_WHITE;
+
+	moves = PawnMove(board, white, square);
+	for (const Move& move : moves) {
+		if (move.to.file == square.file) {
+			// Pawns move forward but don't capture, ignore these moves.
+			continue;
+		}
+		if (board.Get(move.to.file, move.to.rank) & Piece::PAWN)
+			return true;
+	}
+
+	moves = KnightMove(board, white, square);
+	for (const Move& move : moves) {
+		if (board.Get(move.to.file, move.to.rank) & Piece::KNIGHT)
+			return true;
+	}
+
+	moves = BishopMove(board, white, square);
+	for (const Move& move : moves) {
+		if (board.Get(move.to.file, move.to.rank) & Piece::BISHOP)
+			return true;
+		// The queen can also move as a bishop, check for both.
+		if (board.Get(move.to.file, move.to.rank) & Piece::QUEEN)
+			return true;
+	}
+
+	moves = RookMove(board, white, square);
+	for (const Move& move : moves) {
+		if (board.Get(move.to.file, move.to.rank) & Piece::ROOK)
+			return true;
+		// The queen can also move as a rook, check for both.
+		if (board.Get(move.to.file, move.to.rank) & Piece::QUEEN)
+			return true;
+	}
+
+	moves = KingMove(board, white, square);
+	for (const Move& move : moves) {
+		if (board.Get(move.to.file, move.to.rank) & Piece::KING)
+			return true;
+	}
+
+	return false;
+}
+
+std::vector<Move> PossibleMoves(
+	const Board& board, const Piece piece, const SquareIndex from) {
 	if (piece & Piece::PAWN) {
 		return PawnMove(board, piece, from);
 	}
