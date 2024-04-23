@@ -1,7 +1,6 @@
 #ifndef CHESSENGINE_MOVES_H
 #define CHESSENGINE_MOVES_H
 
-#include <optional>
 #include <vector>
 
 #include "board.h"
