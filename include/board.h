@@ -39,15 +39,7 @@ class Board {
   Board& operator=(const Board& board) = default;
   Board& operator=(Board&& board) = default;
 
-  inline void Move(SquareIndex from, SquareIndex to) {
-    Move(from, to, Piece::EMPTY, Castling::NO_CASTLING);
-  }
-  inline void Move(SquareIndex from, SquareIndex to, Piece promotion) {
-    Move(from, to, promotion, Castling::NO_CASTLING);
-  }
-  inline void Move(SquareIndex from, SquareIndex to, Castling castling) {
-    Move(from, to, Piece::EMPTY, castling);
-  }
+  void Move(SquareIndex from, SquareIndex to, Piece promotion, Castling castling);
 
   // Returns the next unoccupied square after 
   std::optional<SquareIndex> NextOccupied(
@@ -81,8 +73,6 @@ class Board {
   }
 
  private:
-  void Move(SquareIndex from, SquareIndex to, Piece promotion, Castling castling);
-
   Piece squares[8][8];
   Castling castling[2];
   int8_t queenside_rook_start_file = 0;

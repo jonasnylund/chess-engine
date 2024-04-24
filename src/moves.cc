@@ -15,14 +15,13 @@ inline bool CanCapture(const Board& board, bool white, int8_t file, int8_t rank)
 	return static_cast<bool>(board.Get(file, rank) & Piece::IS_WHITE) != white;
 }
 
-std::vector<Move> PawnMove(const Board& board, Piece piece, SquareIndex from) {
+void PawnMove(const Board& board, Piece piece, SquareIndex from, std::vector<Move>& output) {
 	const bool is_white = piece & Piece::IS_WHITE;
 	const int8_t direction = is_white ? 1 : -1;
 	const int8_t target_rank = from.rank + direction;
 	const bool is_promotional_square = target_rank == (is_white ? 7 : 0);
 	const bool is_starting_rank = from.rank == (is_white ? 1 : 6);
 
-	std::vector<Move> output;
 	if (IsEmpty(board, from.file, target_rank)) {
 		SquareIndex to = {.file = from.file, .rank = target_rank};
 
@@ -77,12 +76,9 @@ std::vector<Move> PawnMove(const Board& board, Piece piece, SquareIndex from) {
 			output.push_back({.from = from, .to = to});
 		}
 	}
-
-	return output;
 }
 
-std::vector<Move> KnightMove(const Board& board, Piece piece, SquareIndex from) {
-	std::vector<Move> output;
+void KnightMove(const Board& board, Piece piece, SquareIndex from, std::vector<Move>& output) {
 	const bool is_white = piece & Piece::IS_WHITE;
 
 	for (int step = 1; step <= 2; step++) {
@@ -102,11 +98,9 @@ std::vector<Move> KnightMove(const Board& board, Piece piece, SquareIndex from) 
 			}
 		}
 	}
-	return output;
 }
 
-std::vector<Move> BishopMove(const Board& board, Piece piece, SquareIndex from) {
-	std::vector<Move> output;
+void BishopMove(const Board& board, Piece piece, SquareIndex from, std::vector<Move>& output) {
 	const bool is_white = piece & Piece::IS_WHITE;
 
 	for (int i = -1; i <= 1; i += 2) {
@@ -130,12 +124,9 @@ std::vector<Move> BishopMove(const Board& board, Piece piece, SquareIndex from) 
 			}
 		}
 	}
-
-	return output;
 }
 
-std::vector<Move> RookMove(const Board& board, Piece piece, SquareIndex from) {
-	std::vector<Move> output;
+void RookMove(const Board& board, Piece piece, SquareIndex from, std::vector<Move>& output) {
 	const bool is_white = piece & Piece::IS_WHITE;
 
 	for (int i = -1; i <= 1; i += 2) {
@@ -161,25 +152,14 @@ std::vector<Move> RookMove(const Board& board, Piece piece, SquareIndex from) {
 			}
 		}
 	}
-
-	return output;
 }
 
-std::vector<Move> QueenMove(const Board& board, Piece piece, SquareIndex from) {
-	std::vector<Move> moves1 = BishopMove(board, piece, from);
-	std::vector<Move> moves2 = RookMove(board, piece, from);
-
-	const bool one_longer = moves1.size() > moves2.size();
-	std::vector<Move>* longest = (one_longer ? &moves1 : &moves2);
-	std::vector<Move>* shorter = (one_longer ? &moves2 : &moves1);
-
-	longest->reserve(longest->size() + shorter->size());
-	longest->insert(longest->end(), shorter->begin(), shorter->end());
-	return *longest;
+void QueenMove(const Board& board, Piece piece, SquareIndex from, std::vector<Move>& output) {
+	BishopMove(board, piece, from, output);
+	RookMove(board, piece, from, output);
 }
 
-std::vector<Move> KingMove(const Board& board, Piece piece, SquareIndex from) {
-	std::vector<Move> output;
+void KingMove(const Board& board, Piece piece, SquareIndex from, std::vector<Move>& output) {
 	const bool is_white = piece & Piece::IS_WHITE;
 
 	for (int i = -1; i <= 1; i++) {
@@ -199,11 +179,12 @@ std::vector<Move> KingMove(const Board& board, Piece piece, SquareIndex from) {
 				output.push_back({.from = from, .to = to});
 		}
 	}
-
-	return output;
 }
 
-std::optional<SquareIndex> CastlingMove(const Board& board, Piece piece, SquareIndex from, Castling side) {
+std::optional<SquareIndex> CastlingMove(const Board& board,
+																				Piece piece,
+																				SquareIndex from,
+																				Castling side) {
 	const bool is_white = piece & Piece::IS_WHITE;
 	Castling castling = board.CastlingAllowed(is_white);
 
@@ -250,6 +231,42 @@ std::optional<SquareIndex> CastlingMove(const Board& board, Piece piece, SquareI
 	return king_target;
 }
 
+void PossibleMoves(const Board& board,
+									 const SquareIndex from,
+									 std::vector<Move>& output) {
+	const Piece piece = board.Get(from.file, from.rank);
+
+	if (piece & Piece::PAWN) {
+		PawnMove(board, piece, from, output);
+	}
+	else if (piece & Piece::KNIGHT) {
+		KnightMove(board, piece, from, output);
+	}
+	else if (piece & Piece::BISHOP) {
+		BishopMove(board, piece, from, output);
+	}
+	else if (piece & Piece::ROOK) {
+		RookMove(board, piece, from, output);
+	}
+	else if (piece & Piece::QUEEN) {
+		QueenMove(board, piece, from, output);
+	}
+	else if (piece & Piece::KING) {
+		KingMove(board, piece, from, output);
+		// Castling moves are handled separately.
+		std::optional<SquareIndex> castling;
+		castling = CastlingMove(board, piece, from, Castling::KINGSIDE);
+		if (castling.has_value()) {
+			output.push_back({.from = from, .to = *castling, .castling=Castling::KINGSIDE});
+		}
+		castling = CastlingMove(board, piece, from, Castling::QUEENSIDE);
+		if (castling.has_value()) {
+			output.push_back({.from = from, .to = *castling, .castling=Castling::QUEENSIDE});
+		}
+	}
+}
+
+
 }  // namespace
 
 bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
@@ -259,7 +276,7 @@ bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 	// to a piece of that type.
 	const Piece white = by_white ? Piece::EMPTY : Piece::IS_WHITE;
 
-	moves = PawnMove(board, white, square);
+	PawnMove(board, white, square, moves);
 	for (const Move& move : moves) {
 		if (move.to.file == square.file) {
 			// Pawns move forward but don't capture, ignore these moves.
@@ -269,13 +286,15 @@ bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 			return true;
 	}
 
-	moves = KnightMove(board, white, square);
+	moves.clear();
+	KnightMove(board, white, square, moves);
 	for (const Move& move : moves) {
 		if (board.Get(move.to.file, move.to.rank) & Piece::KNIGHT)
 			return true;
 	}
 
-	moves = BishopMove(board, white, square);
+	moves.clear();
+	BishopMove(board, white, square, moves);
 	for (const Move& move : moves) {
 		if (board.Get(move.to.file, move.to.rank) & Piece::BISHOP)
 			return true;
@@ -284,7 +303,8 @@ bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 			return true;
 	}
 
-	moves = RookMove(board, white, square);
+	moves.clear();
+	RookMove(board, white, square, moves);
 	for (const Move& move : moves) {
 		if (board.Get(move.to.file, move.to.rank) & Piece::ROOK)
 			return true;
@@ -293,7 +313,8 @@ bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 			return true;
 	}
 
-	moves = KingMove(board, white, square);
+	moves.clear();
+	KingMove(board, white, square, moves);
 	for (const Move& move : moves) {
 		if (board.Get(move.to.file, move.to.rank) & Piece::KING)
 			return true;
@@ -302,37 +323,64 @@ bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 	return false;
 }
 
-std::vector<Move> PossibleMoves(
-	const Board& board, const Piece piece, const SquareIndex from) {
-	if (piece & Piece::PAWN) {
-		return PawnMove(board, piece, from);
-	}
-	else if (piece & Piece::KNIGHT) {
-		return KnightMove(board, piece, from);
-	}
-	else if (piece & Piece::BISHOP) {
-		return BishopMove(board, piece, from);
-	}
-	else if (piece & Piece::ROOK) {
-		return RookMove(board, piece, from);
-	}
-	else if (piece & Piece::QUEEN) {
-		return QueenMove(board, piece, from);
-	}
-	else if (piece & Piece::KING) {
-		std::vector<Move> moves = KingMove(board, piece, from);
-		// Castling moves are handled separately.
-		std::optional<SquareIndex> castling;
-		castling = CastlingMove(board, piece, from, Castling::KINGSIDE);
-		if (castling.has_value()) {
-			moves.push_back({.from = from, .to = *castling, .castling=Castling::KINGSIDE});
+MoveIterator::MoveIterator(const Board& board)
+	: source_position(board) {
+	// Find where the king is ones.
+	std::optional<SquareIndex> square = SquareIndex({.file = -1, .rank = 0});
+	while (square.has_value()) {
+		if (board.Get(square->file, square->rank) & Piece::KING) {
+			this->kings_position = *square;
+			break;
 		}
-		castling = CastlingMove(board, piece, from, Castling::QUEENSIDE);
-		if (castling.has_value()) {
-			moves.push_back({.from = from, .to = *castling, .castling=Castling::QUEENSIDE});
-		}
-		return moves;
+		square = board.NextOccupied(*square, board.WhiteToMove());
 	}
+	Reset();
+}
 
-	return {};
+MoveIterator::MoveIterator(const Board& board, SquareIndex kings_position)
+  : source_position(board),
+	  kings_position(kings_position) {
+	Reset();
+}
+
+std::optional<Move> MoveIterator::Next() {
+	// Iterate until we find a legal move, or runs out of squares.
+	while (true) {
+		// If there are still moves to consider on the current square, check those first.
+		if (this->current_index < this->moves.size()) {
+			const Move move = this->moves[this->current_index++];
+			this->yielded_position = this->source_position;
+			this->yielded_position.Move(move.from, move.to, move.promotion, move.castling);
+
+			// Check if the king is in check after the move. If so, the move is illegal.
+			if (move.from.file == this->kings_position.file &&
+					move.from.rank == this->kings_position.rank) {
+				// If the king moved, check for checks on the new square.
+				if (IsAttacked(
+					this->yielded_position, move.to, this->yielded_position.WhiteToMove())) {
+						continue;
+					}
+			}
+			else if (IsAttacked(
+				this->yielded_position, this->kings_position, this->yielded_position.WhiteToMove())) {
+					// Else check on the kings previous square.
+					continue;
+				}
+			// King not in check, the move is valid.
+			return move;
+		}
+		// When all moves are considered, continue to the next piece.
+		std::optional<SquareIndex> next_square = this->source_position.NextOccupied(
+			this->current_square, this->source_position.WhiteToMove());
+		if (!next_square.has_value()) {
+			// If there are no more piece to consider, we have covered all moves.
+			return std::nullopt;
+		}
+		this->current_square = *next_square;
+		
+		this->moves.clear();
+		this->current_index = 0;
+		// Fetch available moves from the new position.
+		PossibleMoves(this->source_position, this->current_square, this->moves);
+	}
 }

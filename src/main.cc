@@ -74,27 +74,25 @@ std::tuple<SquareIndex, SquareIndex, Castling, Piece> GetMove(const Board& b) {
 
 // For debugging
 void PrintAvailableMoves(const Board& board) {
-  const bool white_to_move = board.WhiteToMove();
-  std::optional<SquareIndex> current = board.NextOccupied(
-    {.file = -1, .rank = 0}, white_to_move);
-  std::cout << current.has_value() << ", " << white_to_move << std::endl;
-  while (current.has_value()) {
-    const Piece piece = board.Get(current->file, current->rank);
-    std::vector<Move> moves = PossibleMoves(board, piece, *current);
-
-    std::cout << static_cast<char>(current->file + 'a') << current->rank + 1 << " ->";
-    for (const Move& move : moves) {
-      std::cout << " " << static_cast<char>(move.to.file + 'a') << move.to.rank + 1;
-      if (move.promotion != Piece::EMPTY) {
-        if (move.promotion & Piece::QUEEN)
+  MoveIterator move_iter(board);
+  while (std::optional<Move> move = move_iter.Next()) {
+    if (move->castling & Castling::KINGSIDE) {
+      std::cout << "o-o";
+    }
+    else if (move->castling & Castling::QUEENSIDE) {
+      std::cout << "o-o-o";
+    }
+    else {
+      std::cout << static_cast<char>(move->from.file + 'a') << move->from.rank + 1;
+      std::cout << static_cast<char>(move->to.file + 'a') << move->to.rank + 1;
+      if (move->promotion != Piece::EMPTY) {
+        if (move->promotion & Piece::QUEEN)
           std::cout << "=q";
-        else if (move.promotion & Piece::KNIGHT)
+        else if (move->promotion & Piece::KNIGHT)
           std::cout << "=n";
       }
     }
     std::cout << std::endl;
-
-    current = board.NextOccupied(*current, white_to_move);
   }
 }
 
@@ -115,16 +113,7 @@ int main(int argc, char** argv){
     PrintAvailableMoves(b);
 
     const auto [from, to, castling, promotion] = GetMove(b);
-
-    if (castling != Castling::NO_CASTLING) {
-      b.Move(from, to, castling);
-    }
-    else if(promotion != Piece::EMPTY) {
-      b.Move(from, to, promotion);
-    }
-    else {
-      b.Move(from, to);
-    }
+    b.Move(from, to, promotion, castling);
   }
 
   return 0;
