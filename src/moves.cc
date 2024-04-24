@@ -357,15 +357,15 @@ std::optional<Move> MoveIterator::Next() {
 					move.from.rank == this->kings_position.rank) {
 				// If the king moved, check for checks on the new square.
 				if (IsAttacked(
-					this->yielded_position, move.to, this->yielded_position.WhiteToMove())) {
-						continue;
-					}
-			}
-			else if (IsAttacked(
-				this->yielded_position, this->kings_position, this->yielded_position.WhiteToMove())) {
-					// Else check on the kings previous square.
+						this->yielded_position, move.to, this->yielded_position.WhiteToMove())) {
 					continue;
 				}
+			}
+			else if (IsAttacked(
+					this->yielded_position, this->kings_position, this->yielded_position.WhiteToMove())) {
+				// Else check on the kings previous square.
+				continue;
+			}
 			// King not in check, the move is valid.
 			return move;
 		}
