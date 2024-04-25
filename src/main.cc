@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "board.h"
+#include "evaluation.h"
 #include "moves.h"
 #include "pieces.h"
 
@@ -76,6 +77,7 @@ std::tuple<SquareIndex, SquareIndex, Castling, Piece> GetMove(const Board& b) {
 void PrintAvailableMoves(const Board& board) {
   MoveIterator move_iter(board);
   while (std::optional<Move> move = move_iter.Next()) {
+    const int eval = Evaluate(move_iter.CurrentPosition());
     if (move->castling & Castling::KINGSIDE) {
       std::cout << "o-o";
     }
@@ -92,8 +94,9 @@ void PrintAvailableMoves(const Board& board) {
           std::cout << "=n";
       }
     }
-    std::cout << std::endl;
+    std::cout << " (" << eval << ") ";
   }
+  std::cout << std::endl;
 }
 
 }  // namespace

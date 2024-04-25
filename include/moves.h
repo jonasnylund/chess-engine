@@ -28,6 +28,11 @@ class MoveIterator {
 	// considered.
 	std::optional<Move> Next();
 
+	// Returns a view of the board at after the last move returned by `Next`.
+	const Board* CurrentPosition() const {
+		return &this->yielded_position;
+	}
+
 	// Resets the iterator to the initial state.
 	void Reset() {
 		this->current_square = {.file = -1, .rank = 0};
