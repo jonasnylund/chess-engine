@@ -22,7 +22,7 @@ bool IsAttacked(
 class MoveIterator {
  public:
   explicit MoveIterator(const Board& board);
-	explicit MoveIterator(const Board& board, SquareIndex kings_position);
+	explicit MoveIterator(const Board& board, SquareIndex kings_position, SquareIndex opposing_kings_position);
 
 	// Returns the next legal move, or nullopt if all moves have been
 	// considered.
@@ -40,6 +40,7 @@ class MoveIterator {
 	Board yielded_position;
 	SquareIndex current_square;
 	SquareIndex kings_position;
+	SquareIndex opposing_kings_position;
 	std::vector<Move> moves;
 	int current_index = 0;
 };

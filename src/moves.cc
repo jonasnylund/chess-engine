@@ -266,6 +266,16 @@ void PossibleMoves(const Board& board,
 	}
 }
 
+std::optional<SquareIndex> FindKing(const Board& board, bool white) {
+	std::optional<SquareIndex> square = SquareIndex({.file = -1, .rank = 0});
+	while (square.has_value()) {
+		if (board.Get(square->file, square->rank) & Piece::KING) {
+			return square;
+		}
+		square = board.NextOccupied(*square, white);
+	}
+	return std::nullopt;
+}
 
 }  // namespace
 
@@ -325,21 +335,25 @@ bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 
 MoveIterator::MoveIterator(const Board& board)
 	: source_position(board) {
-	// Find where the king is ones.
-	std::optional<SquareIndex> square = SquareIndex({.file = -1, .rank = 0});
-	while (square.has_value()) {
-		if (board.Get(square->file, square->rank) & Piece::KING) {
-			this->kings_position = *square;
-			break;
-		}
-		square = board.NextOccupied(*square, board.WhiteToMove());
+	// Find where the kings are once.
+	std::optional<SquareIndex> this_king = FindKing(
+		this->source_position, this->source_position.WhiteToMove());
+	if (this_king.has_value()) {
+		this->kings_position = *this_king;
+	}
+	std::optional<SquareIndex> opposing_king = FindKing(
+		this->source_position, !this->source_position.WhiteToMove());
+	if (opposing_king.has_value()) {
+		this->opposing_kings_position = *opposing_king;
 	}
 	Reset();
 }
 
-MoveIterator::MoveIterator(const Board& board, SquareIndex kings_position)
+MoveIterator::MoveIterator(
+		const Board& board, SquareIndex kings_position, SquareIndex opposing_kings_position)
   : source_position(board),
-	  kings_position(kings_position) {
+	  kings_position(kings_position),
+		opposing_kings_position(opposing_kings_position) {
 	Reset();
 }
 
