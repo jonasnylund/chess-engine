@@ -398,3 +398,14 @@ std::optional<Move> MoveIterator::Next() {
 		PossibleMoves(this->source_position, this->current_square, this->moves);
 	}
 }
+
+MoveIterator MoveIterator::ContinuePosition() const {
+		SquareIndex king = this->kings_position;
+		const Move move = this->moves[this->current_index - 1];
+		// If the king moved, update the position.
+		if (move.from.file == king.file && move.to.rank == king.rank) {
+			king = move.to;
+		}
+		// Swap the arguments order since the other side has the next move.
+		return MoveIterator(this->yielded_position, opposing_kings_position, king);
+	}

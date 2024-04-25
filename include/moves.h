@@ -22,7 +22,6 @@ bool IsAttacked(
 class MoveIterator {
  public:
   explicit MoveIterator(const Board& board);
-	explicit MoveIterator(const Board& board, SquareIndex kings_position, SquareIndex opposing_kings_position);
 
 	// Returns the next legal move, or nullopt if all moves have been
 	// considered.
@@ -32,6 +31,9 @@ class MoveIterator {
 	const Board* CurrentPosition() const {
 		return &this->yielded_position;
 	}
+	// Continue the position after the last move returned by `Next`,
+	// iterating the responsive moves of the other side.
+	MoveIterator ContinuePosition() const;
 
 	// Resets the iterator to the initial state.
 	void Reset() {
@@ -40,7 +42,10 @@ class MoveIterator {
 		this->current_index = 0;
 	}
 
+
  private:
+	explicit MoveIterator(const Board& board, SquareIndex kings_position, SquareIndex opposing_kings_position);
+
   const Board source_position;
 	Board yielded_position;
 	SquareIndex current_square;
