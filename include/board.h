@@ -74,6 +74,9 @@ class Board {
     else
       return this->queenside_rook_start_file;
   }
+  inline int HalfmoveClock() const {
+    return this->halfmove_clock;
+  }
 
  private:
   Piece squares[8][8];
