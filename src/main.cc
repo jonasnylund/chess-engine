@@ -77,7 +77,7 @@ std::tuple<SquareIndex, SquareIndex, Castling, Piece> GetMove(const Board& b) {
 void PrintAvailableMoves(const Board& board) {
   MoveIterator move_iter(board);
   while (std::optional<Move> move = move_iter.Next()) {
-    const int eval = Evaluate(move_iter.CurrentPosition());
+    const int eval = Evaluate(move_iter.CurrentPosition(), 10);
     if (move->castling & Castling::KINGSIDE) {
       std::cout << "o-o";
     }

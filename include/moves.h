@@ -27,13 +27,19 @@ class MoveIterator {
 	// considered.
 	std::optional<Move> Next();
 
+	// Returns a view of the board before any move.
+	const Board* SourcePosition() const {
+		return &this->source_position;
+	}
 	// Returns a view of the board at after the last move returned by `Next`.
 	const Board* CurrentPosition() const {
 		return &this->yielded_position;
 	}
 	// Continue the position after the last move returned by `Next`,
 	// iterating the responsive moves of the other side.
-	MoveIterator ContinuePosition() const;
+	MoveIterator ContinuePosition() const {
+		return MoveIterator(this->yielded_position);
+	}
 
 	// Resets the iterator to the initial state.
 	void Reset() {
@@ -42,15 +48,10 @@ class MoveIterator {
 		this->current_index = 0;
 	}
 
-
  private:
-	explicit MoveIterator(const Board& board, SquareIndex kings_position, SquareIndex opposing_kings_position);
-
   const Board source_position;
 	Board yielded_position;
 	SquareIndex current_square;
-	SquareIndex kings_position;
-	SquareIndex opposing_kings_position;
 	std::vector<Move> moves;
 	int current_index = 0;
 };

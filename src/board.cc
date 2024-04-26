@@ -146,6 +146,8 @@ void Board::Move(SquareIndex from, SquareIndex to, Piece promotion, Castling cas
   if (is_king_move) {
     // Castling no longer allowed.
     this->castling[!this->white_to_move] = Castling::NO_CASTLING;
+    // Keep track of the king.
+    this->kings_position[!this->white_to_move] = to;
   }
 
   if (is_capturing_move || is_pawn_move) {
@@ -209,6 +211,7 @@ Board Board::FromFEN(const std::string& fen) {
     assert(0 <= file && file < 8);
     assert(0 <= rank && rank < 8);
 
+    const bool is_white = std::isupper(c);
     const char ch = std::tolower(c);
     if (ch == 'p') {
       board.squares[rank][file] = Piece::PAWN;
@@ -227,8 +230,9 @@ Board Board::FromFEN(const std::string& fen) {
     }
     else if (ch == 'k') {
       board.squares[rank][file] = Piece::KING;
+      board.kings_position[!is_white] = {.file = file, .rank = rank};
     }
-    if (std::isupper(c)) {
+    if (is_white) {
       board.squares[rank][file] = board.squares[rank][file] | Piece::IS_WHITE;
     }
     file++;

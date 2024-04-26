@@ -59,6 +59,9 @@ class Board {
   inline bool WhiteToMove() const {
     return this->white_to_move;
   }
+  inline SquareIndex KingsPosition(bool white) const {
+    return this->kings_position[!white];
+  }
   inline std::optional<SquareIndex> EnPassantSquare() const {
     return this->en_passent;
   }
@@ -75,6 +78,7 @@ class Board {
  private:
   Piece squares[8][8];
   Castling castling[2];
+  SquareIndex kings_position[2];
   int8_t queenside_rook_start_file = 0;
   int8_t kingside_rook_start_file = 7;
   std::optional<SquareIndex> en_passent;

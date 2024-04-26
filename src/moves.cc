@@ -335,29 +335,11 @@ bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 
 MoveIterator::MoveIterator(const Board& board)
 	: source_position(board) {
-	// Find where the kings are once.
-	std::optional<SquareIndex> this_king = FindKing(
-		this->source_position, this->source_position.WhiteToMove());
-	if (this_king.has_value()) {
-		this->kings_position = *this_king;
-	}
-	std::optional<SquareIndex> opposing_king = FindKing(
-		this->source_position, !this->source_position.WhiteToMove());
-	if (opposing_king.has_value()) {
-		this->opposing_kings_position = *opposing_king;
-	}
-	Reset();
-}
-
-MoveIterator::MoveIterator(
-		const Board& board, SquareIndex kings_position, SquareIndex opposing_kings_position)
-  : source_position(board),
-	  kings_position(kings_position),
-		opposing_kings_position(opposing_kings_position) {
 	Reset();
 }
 
 std::optional<Move> MoveIterator::Next() {
+	const bool whites_move = this->source_position.WhiteToMove();
 	// Iterate until we find a legal move, or runs out of squares.
 	while (true) {
 		// If there are still moves to consider on the current square, check those first.
@@ -367,19 +349,12 @@ std::optional<Move> MoveIterator::Next() {
 			this->yielded_position.Move(move.from, move.to, move.promotion, move.castling);
 
 			// Check if the king is in check after the move. If so, the move is illegal.
-			if (move.from.file == this->kings_position.file &&
-					move.from.rank == this->kings_position.rank) {
-				// If the king moved, check for checks on the new square.
-				if (IsAttacked(
-						this->yielded_position, move.to, this->yielded_position.WhiteToMove())) {
-					continue;
-				}
-			}
-			else if (IsAttacked(
-					this->yielded_position, this->kings_position, this->yielded_position.WhiteToMove())) {
-				// Else check on the kings previous square.
+			const SquareIndex square = this->yielded_position.KingsPosition(whites_move);
+			if (IsAttacked(this->yielded_position, square, !whites_move)) {
 				continue;
 			}
+			
+
 			// King not in check, the move is valid.
 			return move;
 		}
@@ -398,14 +373,3 @@ std::optional<Move> MoveIterator::Next() {
 		PossibleMoves(this->source_position, this->current_square, this->moves);
 	}
 }
-
-MoveIterator MoveIterator::ContinuePosition() const {
-		SquareIndex king = this->kings_position;
-		const Move move = this->moves[this->current_index - 1];
-		// If the king moved, update the position.
-		if (move.from.file == king.file && move.to.rank == king.rank) {
-			king = move.to;
-		}
-		// Swap the arguments order since the other side has the next move.
-		return MoveIterator(this->yielded_position, opposing_kings_position, king);
-	}
