@@ -14,31 +14,32 @@ constexpr int kBishop = 300;
 constexpr int kRook = 500;
 constexpr int kQueen = 800;
 
-int EvalSide(const Board* board, bool white) {
+int CountPieces(const Board* board) {
   int value = 0;
 
-  std::optional<SquareIndex> current_square = board->NextOccupied(
-    {.file = -1, .rank = 0}, white);
-
-  while (current_square.has_value()) {
-    const Piece piece = board->Get(current_square->file, current_square->rank);
-
-    if (piece & Piece::PAWN) {
-      value += kPawn;
+  for (int8_t file = 0; file < 8; file++) {
+    for (int8_t rank = 0; rank < 8; rank++) {
+      const Piece piece = board->Get(file, rank);
+      if (piece == Piece::EMPTY) {
+        continue;
+      }
+      const int sign = piece & Piece::IS_WHITE ? 1 : -1;
+      if (piece & Piece::PAWN) {
+        value += sign * kPawn;
+      }
+      else if (piece & Piece::KNIGHT) {
+        value += sign * kKnight;
+      }
+      else if (piece & Piece::BISHOP) {
+        value += sign * kBishop;
+      }
+      else if (piece & Piece::ROOK) {
+        value += sign * kRook;
+      }
+      else if (piece & Piece::QUEEN) {
+        value += sign * kQueen;
+      }
     }
-    else if (piece & Piece::KNIGHT) {
-      value += kKnight;
-    }
-    else if (piece & Piece::BISHOP) {
-      value += kBishop;
-    }
-    else if (piece & Piece::ROOK) {
-      value += kRook;
-    }
-    else if (piece & Piece::QUEEN) {
-      value += kQueen;
-    }
-    current_square = board->NextOccupied(*current_square, white);
   }
 
   return value;
@@ -56,7 +57,7 @@ int Evaluate(MoveIterator& iterator, int depth) {
   if (depth <= 0) {
     // TODO: We should do a search for a quiet position before counting up the
     // pieces, if there are forced lines continuing.
-    return EvalSide(source_position, true) - EvalSide(source_position, false);
+    return CountPieces(source_position);
   }
 
   int min_max = (white_to_move ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max());

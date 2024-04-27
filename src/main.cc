@@ -77,7 +77,7 @@ std::tuple<SquareIndex, SquareIndex, Castling, Piece> GetMove(const Board& b) {
 void PrintAvailableMoves(const Board& board) {
   MoveIterator move_iter(board);
   while (std::optional<Move> move = move_iter.Next()) {
-    const int eval = Evaluate(move_iter.CurrentPosition(), 2);
+    const int eval = Evaluate(move_iter.CurrentPosition(), 5);
     if (move->castling & Castling::KINGSIDE) {
       std::cout << "o-o";
     }
@@ -104,20 +104,20 @@ void PrintAvailableMoves(const Board& board) {
 int main(int argc, char** argv){
   std::string starting_pos;
   std::cout << "Starting position (leave empty for default):" << std::endl;
-  getline(std::cin, starting_pos);
+  // getline(std::cin, starting_pos);
   if (starting_pos.empty()) {
     starting_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   }
 
   Board b = Board::FromFEN(starting_pos);
 
-  while (true) {
-    b.Print(std::cout);
-    PrintAvailableMoves(b);
+  // while (true) {
+  b.Print(std::cout);
+  PrintAvailableMoves(b);
 
-    const auto [from, to, castling, promotion] = GetMove(b);
-    b.Move(from, to, promotion, castling);
-  }
+    // const auto [from, to, castling, promotion] = GetMove(b);
+    // b.Move(from, to, promotion, castling);
+  // }
 
   return 0;
 }
