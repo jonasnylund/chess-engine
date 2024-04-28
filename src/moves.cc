@@ -12,7 +12,7 @@ inline bool IsEmpty(const Board& board, int8_t file, int8_t rank) {
 }
 
 inline bool CanCapture(const Board& board, bool white, int8_t file, int8_t rank) {
-	return static_cast<bool>(board.Get(file, rank) & Piece::IS_WHITE) != white;
+	return !IsEmpty(board, file, rank) && static_cast<bool>(board.Get(file, rank) & Piece::IS_WHITE) != white;
 }
 
 void PawnMove(const Board& board,
@@ -104,7 +104,7 @@ void KnightMove(const Board& board,
 					continue;
 				if (to.file < 0 || to.file > 7)
 					continue;
-				if (non_capturing && (board, to.file, to.rank)) {
+				if (non_capturing && IsEmpty(board, to.file, to.rank)) {
 					output.push_back({.from = from, .to = to});
 				}
 				else if (capturing && CanCapture(board, is_white, to.file, to.rank)) {
@@ -323,10 +323,6 @@ bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 
 	PawnMove(board, white, square, moves, true, false);
 	for (const Move& move : moves) {
-		if (move.to.file == square.file) {
-			// Pawns move forward but don't capture, ignore these moves.
-			continue;
-		}
 		if (board.Get(move.to.file, move.to.rank) & Piece::PAWN)
 			return true;
 	}
@@ -371,7 +367,7 @@ bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 MoveIterator::MoveIterator(const Board& board)
 	: source_position(board) {
 	Reset();
-	this->moves.reserve(32);
+	this->moves.reserve(8);
 }
 
 std::optional<Move> MoveIterator::Next(bool non_capturing, bool capturing, bool checks) {
@@ -415,7 +411,7 @@ std::optional<Move> MoveIterator::Next(bool non_capturing, bool capturing, bool 
 			this->source_position,
 			this->current_square,
 			this->moves,
-			non_capturing,
-			capturing);
+			capturing,
+			non_capturing);
 	}
 }

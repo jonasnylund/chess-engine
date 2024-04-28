@@ -45,6 +45,58 @@ int CountPieces(const Board* board) {
   return value;
 }
 
+int Qiecence(MoveIterator& iterator, const int depth, int alpha, int beta) {
+  int num_moves = 0;
+  const Board* source_position = iterator.SourcePosition();
+  const bool white_to_move = source_position->WhiteToMove();
+
+  if (source_position->HalfmoveClock() >= 50) {
+    // Draw by 50-move rule.
+    return 0;
+  }
+
+  int min_max;
+  if (white_to_move) {
+    min_max = std::numeric_limits<int>::min();
+    while (const std::optional<Move> move = iterator.Next(false, true, depth < 4)) {
+      MoveIterator next = iterator.ContinuePosition();
+      const int eval = Qiecence(next, depth + 1, alpha, beta);
+      min_max = eval > min_max ? eval : min_max;
+      if (min_max >= beta)
+        return min_max;
+      alpha = min_max > alpha ? min_max : alpha;
+      num_moves++;
+    }
+  }
+  else {
+    min_max = std::numeric_limits<int>::max();
+    while (const std::optional<Move> move = iterator.Next(false, true, depth < 4)) {
+      MoveIterator next = iterator.ContinuePosition();
+      const int eval = Qiecence(next, depth + 1, alpha, beta);
+      min_max = eval < min_max ? eval : min_max;
+      if (min_max <= alpha)
+        return min_max;
+      beta = min_max < beta ? min_max : beta; 
+      num_moves++;
+    }
+  }
+
+  if (num_moves == 0) {
+    const SquareIndex king = source_position->KingsPosition(white_to_move);
+    const bool is_in_check = IsAttacked(*source_position, king, !white_to_move);
+
+    if (is_in_check) {
+      // King is in check, and we have no moves. This is checkmate
+      return (white_to_move ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max());
+    }
+    else {
+      return CountPieces(source_position);
+    }
+  }
+  return min_max;
+}
+
+
 int Evaluate(MoveIterator& iterator, const int depth, int alpha, int beta) {
   int num_moves = 0;
   const Board* source_position = iterator.SourcePosition();
@@ -57,7 +109,7 @@ int Evaluate(MoveIterator& iterator, const int depth, int alpha, int beta) {
   if (depth <= 0) {
     // TODO: We should do a search for a quiet position before counting up the
     // pieces, if there are forced lines continuing.
-    return CountPieces(source_position);
+    return Qiecence(iterator, 0, alpha, beta);
   }
 
   int min_max;
