@@ -60,8 +60,9 @@ int Evaluate(MoveIterator& iterator, const int depth, int alpha, int beta) {
     return CountPieces(source_position);
   }
 
-  int min_max = (white_to_move ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max());
+  int min_max;
   if (white_to_move) {
+    min_max = std::numeric_limits<int>::min();
     while (const std::optional<Move> move = iterator.Next()) {
       MoveIterator next = iterator.ContinuePosition();
       const int eval = Evaluate(next, depth - 1, alpha, beta);
@@ -73,6 +74,7 @@ int Evaluate(MoveIterator& iterator, const int depth, int alpha, int beta) {
     }
   }
   else {
+    min_max = std::numeric_limits<int>::max();
     while (const std::optional<Move> move = iterator.Next()) {
       MoveIterator next = iterator.ContinuePosition();
       const int eval = Evaluate(next, depth - 1, alpha, beta);
@@ -104,7 +106,7 @@ int Evaluate(MoveIterator& iterator, const int depth, int alpha, int beta) {
 
 int Evaluate(const Board* board, int depth) {
   MoveIterator iterator(*board);
-  const int alpha =  std::numeric_limits<int>::min();
+  const int alpha = std::numeric_limits<int>::min();
   const int beta = std::numeric_limits<int>::max();
   return Evaluate(iterator, depth, alpha, beta);
 }
