@@ -12,7 +12,7 @@ inline bool IsEmpty(const Board& board, int8_t file, int8_t rank) {
 }
 
 inline bool CanCapture(const Board& board, bool white, int8_t file, int8_t rank) {
-	return !IsEmpty(board, file, rank) && static_cast<bool>(board.Get(file, rank) & Piece::IS_WHITE) != white;
+	return !IsEmpty(board, file, rank) && (static_cast<bool>(board.Get(file, rank) & Piece::IS_WHITE) != white);
 }
 
 void PawnMove(const Board& board,
