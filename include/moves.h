@@ -25,7 +25,7 @@ class MoveIterator {
 
 	// Returns the next legal move, or nullopt if all moves have been
 	// considered.
-	std::optional<Move> Next();
+	std::optional<Move> Next(bool non_capturing, bool capturing, bool checks);
 
 	// Returns a view of the board before any move.
 	const Board* SourcePosition() const {

@@ -63,7 +63,7 @@ int Evaluate(MoveIterator& iterator, const int depth, int alpha, int beta) {
   int min_max;
   if (white_to_move) {
     min_max = std::numeric_limits<int>::min();
-    while (const std::optional<Move> move = iterator.Next()) {
+    while (const std::optional<Move> move = iterator.Next(true, true, true)) {
       MoveIterator next = iterator.ContinuePosition();
       const int eval = Evaluate(next, depth - 1, alpha, beta);
       min_max = eval > min_max ? eval : min_max;
@@ -75,7 +75,7 @@ int Evaluate(MoveIterator& iterator, const int depth, int alpha, int beta) {
   }
   else {
     min_max = std::numeric_limits<int>::max();
-    while (const std::optional<Move> move = iterator.Next()) {
+    while (const std::optional<Move> move = iterator.Next(true, true, true)) {
       MoveIterator next = iterator.ContinuePosition();
       const int eval = Evaluate(next, depth - 1, alpha, beta);
       min_max = eval < min_max ? eval : min_max;
