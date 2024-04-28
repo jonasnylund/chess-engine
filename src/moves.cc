@@ -336,6 +336,7 @@ bool IsAttacked(const Board& board, SquareIndex square, bool by_white) {
 MoveIterator::MoveIterator(const Board& board)
 	: source_position(board) {
 	Reset();
+	this->moves.reserve(32);
 }
 
 std::optional<Move> MoveIterator::Next() {

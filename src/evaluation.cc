@@ -45,7 +45,7 @@ int CountPieces(const Board* board) {
   return value;
 }
 
-int Evaluate(MoveIterator& iterator, int depth) {
+int Evaluate(MoveIterator& iterator, const int depth, int alpha, int beta) {
   int num_moves = 0;
   const Board* source_position = iterator.SourcePosition();
   const bool white_to_move = source_position->WhiteToMove();
@@ -61,11 +61,27 @@ int Evaluate(MoveIterator& iterator, int depth) {
   }
 
   int min_max = (white_to_move ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max());
-  while (const std::optional<Move> move = iterator.Next()) {
-    MoveIterator next = iterator.ContinuePosition();
-    const int eval = Evaluate(next, depth - 1);
-    min_max = (eval > min_max) == white_to_move ? eval : min_max;
-    num_moves++;
+  if (white_to_move) {
+    while (const std::optional<Move> move = iterator.Next()) {
+      MoveIterator next = iterator.ContinuePosition();
+      const int eval = Evaluate(next, depth - 1, alpha, beta);
+      min_max = eval > min_max ? eval : min_max;
+      if (min_max >= beta)
+        return min_max;
+      alpha = min_max > alpha ? min_max : alpha;
+      num_moves++;
+    }
+  }
+  else {
+    while (const std::optional<Move> move = iterator.Next()) {
+      MoveIterator next = iterator.ContinuePosition();
+      const int eval = Evaluate(next, depth - 1, alpha, beta);
+      min_max = eval < min_max ? eval : min_max;
+      if (min_max <= alpha)
+        return min_max;
+      beta = min_max < beta ? min_max : beta; 
+      num_moves++;
+    }
   }
 
   if (num_moves == 0) {
@@ -88,6 +104,8 @@ int Evaluate(MoveIterator& iterator, int depth) {
 
 int Evaluate(const Board* board, int depth) {
   MoveIterator iterator(*board);
-  return Evaluate(iterator, depth);
+  const int alpha =  std::numeric_limits<int>::min();
+  const int beta = std::numeric_limits<int>::max();
+  return Evaluate(iterator, depth, alpha, beta);
 }
 
